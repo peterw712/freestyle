@@ -104,15 +104,20 @@ const setIntervalButton = document.getElementById('setIntervalButton');
 
 let intervalId;
 
+// Function to get a random word from the array
 function getRandomWord() {
     const randomIndex = Math.floor(Math.random() * words.length);
     return words[randomIndex];
 }
 
+// Function to update the displayed word and speak it aloud
 function updateWord() {
-    wordContainer.textContent = getRandomWord();
+    const newWord = getRandomWord();
+    wordContainer.textContent = newWord;
+    speak(newWord);
 }
 
+// Function to set a new interval for generating words
 function setNewInterval() {
     const intervalValue = parseInt(intervalInput.value) * 1000;
     if (!isNaN(intervalValue) && intervalValue > 0) {
@@ -124,6 +129,13 @@ function setNewInterval() {
     }
 }
 
+// Function to speak the given text
+function speak(text) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    window.speechSynthesis.speak(utterance);
+}
+
+// Event listener for the set interval button
 setIntervalButton.addEventListener('click', setNewInterval);
 
 // Initial call to display a word immediately on load and set default interval
