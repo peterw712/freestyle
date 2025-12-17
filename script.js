@@ -101,48 +101,74 @@ const words = [
     "I am aligned with what matters to me."
   ];
 
+const wordContainer = document.getElementById("wordContainer");
+const intervalInput = document.getElementById("intervalInput");
+const setIntervalButton = document.getElementById("setIntervalButton");
 
-const wordContainer = document.getElementById('wordContainer');
-const intervalInput = document.getElementById('intervalInput');
-const setIntervalButton = document.getElementById('setIntervalButton');
+let pauseMs = 5000;     // pause AFTER speaking finishes
+let timerId = null;
+let isRunning = true;
+let lastIndex = -1;
 
-let intervalId;
-
-// Function to get a random word from the array
+// Get a random affirmation (avoids repeating the same one twice in a row)
 function getRandomWord() {
-    const randomIndex = Math.floor(Math.random() * words.length);
-    return words[randomIndex];
+  if (!words.length) return "Paste your affirmations into words[].";
+  if (words.length === 1) return words[0];
+
+  let idx;
+  do {
+    idx = Math.floor(Math.random() * words.length);
+  } while (idx === lastIndex);
+
+  lastIndex = idx;
+  return words[idx];
 }
 
-// Function to update the displayed word and speak it aloud
-function updateWord() {
-    const newWord = getRandomWord();
-    wordContainer.textContent = newWord;
-    speak(newWord);
-}
-
-// Function to set a new interval for generating words
-function setNewInterval() {
-    const intervalValue = parseInt(intervalInput.value) * 1000;
-    if (!isNaN(intervalValue) && intervalValue > 0) {
-        clearInterval(intervalId);
-        intervalId = setInterval(updateWord, intervalValue);
-        updateWord();  // Update word immediately after changing interval
-    } else {
-        alert("Please enter a valid number greater than 0");
-    }
-}
-
-// Function to speak the given text
+// Speak text and resolve when finished
 function speak(text) {
+  return new Promise((resolve) => {
+    // Stop current + clear queue to prevent lag/drift
+    window.speechSynthesis.cancel();
+
     const utterance = new SpeechSynthesisUtterance(text);
+
+    utterance.onend = () => resolve();
+    utterance.onerror = () => resolve(); // fail gracefully
+
     window.speechSynthesis.speak(utterance);
+  });
 }
 
-// Event listener for the set interval button
-setIntervalButton.addEventListener('click', setNewInterval);
+async function runCycle() {
+  if (!isRunning) return;
 
-// Initial call to display a word immediately on load and set default interval
-intervalId = setInterval(updateWord, 5000);
-updateWord();
+  const newWord = getRandomWord();
+  wordContainer.textContent = newWord;
+
+  await speak(newWord);
+
+  if (!isRunning) return;
+
+  clearTimeout(timerId);
+  timerId = setTimeout(runCycle, pauseMs);
+}
+
+function setNewInterval() {
+  const seconds = Number(intervalInput.value);
+  if (Number.isFinite(seconds) && seconds > 0) {
+    pauseMs = seconds * 1000;
+
+    // Match your old behavior: apply immediately by showing/speaking a new one now
+    clearTimeout(timerId);
+    runCycle();
+  } else {
+    alert("Please enter a valid number greater than 0");
+  }
+}
+
+setIntervalButton.addEventListener("click", setNewInterval);
+
+// Start immediately (note: some browsers won't speak until after a user interaction)
+runCycle();
+
 
