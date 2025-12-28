@@ -100,7 +100,7 @@ const words = [
     "I can keep my life bigger than any chart.",
     "I can trust that stability is a skill I’m building.",
     "I can choose peace as a long-term strategy.",
-    "I am allowed to feel better, starting now."
+    "I am allowed to feel better, starting now.",
     "I can begin again without drama.",
     "I can do today at a humane pace.",
     "I can lower the volume without losing my edge.",
@@ -288,6 +288,7 @@ setIntervalButton.addEventListener("click", setNewInterval);
 
 // Start immediately (note: some browsers won't speak until after a user interaction)
 runCycle();
+
 
 
 
